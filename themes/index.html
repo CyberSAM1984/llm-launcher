@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Launcher · Выбор оформления</title>
+<style>
+:root{--bg:#0d1017;--card:#161b26;--line:#232b3a;--tx:#e8ecf3;--dim:#7d8799;--acc:#4f9cf9}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 "Segoe UI",system-ui,sans-serif;padding:32px;max-width:900px;margin:0 auto}
+h1{font-size:22px;margin-bottom:6px}
+.sub{color:var(--dim);font-size:14px;margin-bottom:24px}
+.list{display:flex;flex-direction:column;gap:12px}
+a.item{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;text-decoration:none;color:var(--tx);transition:.15s}
+a.item:hover{border-color:var(--acc);transform:translateX(4px)}
+a.item .n{font-weight:600;font-size:16px}
+a.item .d{color:var(--dim);font-size:13px;margin-top:4px}
+.back{margin-top:24px;display:inline-block;color:var(--acc);text-decoration:none;font-size:14px}
+</style>
+</head>
+<body>
+<h1>🦙 Выбор оформления панели</h1>
+<div class="sub">Пять вариантов отображения одних и тех же данных. Все подключены к живому серверу.</div>
+<div class="list">
+  <a class="item" href="/theme/v1"><div class="n">1 · Компактный дашборд</div><div class="d">Крупные плитки метрик, модели-чипы, всё на одном экране без прокрутки</div></a>
+  <a class="item" href="/theme/v2"><div class="n">2 · Терминал (ретро)</div><div class="d">Зелёный текст на чёрном, ASCII-рамки, прогресс-бары из символов, сканлайны</div></a>
+  <a class="item" href="/theme/v3"><div class="n">3 · Сайдбар</div><div class="d">Слева список моделей и статус, справа метрики и действия</div></a>
+  <a class="item" href="/theme/v4"><div class="n">4 · Мониторинг (Grafana)</div><div class="d">Живые графики GPU и VRAM за последние 2 минуты, панели в стиле дашбордов мониторинга</div></a>
+  <a class="item" href="/theme/v5"><div class="n">5 · Минимализм</div><div class="d">Одна строка состояния со всеми данными, ниже только список моделей</div></a>
+</div>
+<a class="back" href="/">← Текущая панель (оригинал)</a>
+</body>
+</html>

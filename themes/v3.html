@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Launcher · Сайдбар</title>
+<style>
+:root{--bg:#101318;--side:#151a22;--card:#1a2029;--acc:#5b8def;--ok:#3fb96f;--err:#e5534b;--dim:#8b93a3;--tx:#e6e9ef}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.5 "Segoe UI",system-ui,sans-serif;display:flex;min-height:100vh}
+.side{width:260px;background:var(--side);border-right:1px solid #232b36;padding:18px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.side h1{font-size:16px;margin-bottom:2px}
+.side .v{color:var(--dim);font-size:11px;margin-bottom:14px}
+.srv{font-size:12px;color:var(--dim);padding:8px 10px;background:var(--card);border-radius:8px;margin-bottom:8px}
+.srv b{color:var(--tx)}
+.mitem{padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:.15s}
+.mitem:hover{background:var(--card)}
+.mitem.run{background:var(--card);border-color:var(--ok)}
+.mitem .n{font-weight:600;font-size:14px}
+.mitem.run .n::after{content:" ✓";color:var(--ok)}
+.mitem .m{color:var(--dim);font-size:11px;margin-top:2px}
+.mitem .a{font-size:11px;color:var(--acc);margin-top:4px}
+.mitem.run .a{color:var(--ok)}
+.main{flex:1;padding:22px;max-width:900px}
+.main h2{font-size:18px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid #232b36;border-radius:12px;padding:14px 16px}
+.card .l{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.card .v{font-size:24px;font-weight:700;margin-top:6px}
+.card .v small{font-size:13px;color:var(--dim);font-weight:400}
+.card .x{color:var(--dim);font-size:11px;margin-top:4px}
+.bar{height:5px;background:#232b36;border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);transition:width .5s}
+.bar i.hot{background:#e0a63f}.bar i.crit{background:var(--err)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+button{background:var(--card);border:1px solid #2c3546;color:var(--tx);padding:9px 16px;border-radius:9px;font-size:13px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:default}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+#out{background:var(--card);border:1px solid #232b36;border-radius:12px;padding:14px 16px;color:var(--dim);font-size:13px;white-space:pre-wrap;display:none}
+#out.show{display:block}
+.spin{display:inline-block;animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.err{color:var(--err)}
+</style>
+</head>
+<body>
+<div class="side">
+  <h1>🦙 LLM Launcher</h1>
+  <div class="v">Вариант 3 · Сайдбар</div>
+  <div class="srv" id="srv">…</div>
+  <div id="models"></div>
+</div>
+<div class="main">
+  <h2 id="title">Панель управления</h2>
+  <div class="grid">
+    <div class="card"><div class="l">Скорость генерации</div><div class="v" id="c_speed">— <small>tok/s</small></div><div class="x" id="c_speed_x"></div></div>
+    <div class="card"><div class="l">Последний запрос</div><div class="v" id="c_last">—</div><div class="x" id="c_last_x"></div></div>
+    <div class="card"><div class="l">GPU</div><div class="v" id="c_gpu">— <small>%</small></div><div class="bar"><i id="b_gpu"></i></div></div>
+    <div class="card"><div class="l">VRAM</div><div class="v" id="c_vram">— <small>МБ</small></div><div class="bar"><i id="b_vram"></i></div><div class="x" id="c_vram_x"></div></div>
+  </div>
+  <div class="actions">
+    <button class="pri" id="b_speed" onclick="speed()">⚡ Замерить скорость</button>
+    <button id="b_test" onclick="test()">Проверить ответ</button>
+    <button id="b_log" onclick="showlog()">Лог сервера</button>
+    <button id="b_vram" onclick="showvram()">Кто ест VRAM</button>
+    <button id="b_stop" onclick="stop()">Остановить</button>
+  </div>
+  <div id="out"></div>
+</div>
+<script>
+async function api(p,b){const o=b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{};return (await fetch(p,o)).json()}
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
+function fmtCtx(n){if(!n)return '?';return n%1024===0?(n/1024)+'K':String(n)}
+async function refresh(){
+  let s;try{s=await api('/api/status')}catch(e){return}
+  const srv=document.getElementById('srv');
+  if(s.action==='switching')srv.innerHTML='<span class="spin">⟳</span> Загрузка <b>'+esc(s.target_alias||'')+'</b>… '+s.action_elapsed+'с';
+  else if(s.llama.running)srv.innerHTML='Работает: <b>'+esc(s.llama.alias)+'</b><br>'+(s.llama.quant||'')+' · '+fmtCtx(s.llama.n_ctx);
+  else if(s.llama.loading)srv.innerHTML='<span class="spin">⟳</span> Модель грузится…';
+  else srv.innerHTML='Сервер остановлен';
+  document.getElementById('title').textContent=s.llama.running?('Модель: '+s.llama.alias):'Панель управления';
+  const m=s.metrics||{},v=s.vram;
+  const cs=document.getElementById('c_speed');
+  if(m.busy>0){cs.innerHTML='<span class="spin">⟳</span> <small>генерация…</small>';document.getElementById('c_speed_x').textContent='GPU '+(v?v.util:'?')+'%';}
+  else if(m.gen_tps){cs.innerHTML=m.gen_tps+' <small>tok/s</small>';document.getElementById('c_speed_x').textContent=m.prompt_tps?('промпт '+m.prompt_tps+' tok/s'):'';}
+  else{cs.innerHTML='— <small>tok/s</small>';document.getElementById('c_speed_x').textContent='';}
+  if(m.last_s){document.getElementById('c_last').innerHTML=m.last_s+' <small>с</small>';document.getElementById('c_last_x').textContent=m.last_tok?(m.last_tok+' токенов'):'';}
+  else{document.getElementById('c_last').textContent='—';document.getElementById('c_last_x').textContent='';}
+  document.getElementById('c_gpu').innerHTML=(v?v.util:'—')+' <small>%</small>';
+  const bg=document.getElementById('b_gpu');bg.style.width=(v?v.util:0)+'%';bg.className=(v&&v.util>80)?'crit':((v&&v.util>50)?'hot':'');
+  if(v){document.getElementById('c_vram').innerHTML=v.used_mb+' <small>МБ</small>';
+    const p=Math.round(v.used_mb/v.total_mb*100);const bv=document.getElementById('b_vram');bv.style.width=p+'%';bv.className=p>90?'crit':(p>75?'hot':'');
+    document.getElementById('c_vram_x').textContent='из '+v.total_mb+' МБ ('+p+'%)';}
+  document.getElementById('models').innerHTML=s.models.map(x=>{
+    const run=s.llama.running&&s.llama.alias===x.alias;
+    return '<div class="mitem'+(run?' run':'')+'" onclick="'+(run?'':'launch(\''+x.bat+'\')')+'">'+
+      '<div class="n">'+esc(x.alias)+'</div><div class="m">'+esc(x.quant)+' · '+fmtCtx(x.ctx)+' · '+esc(x.size)+'</div>'+
+      '<div class="a">'+(run?'Запущена':(s.llama.running?'Переключиться':'Запустить'))+'</div></div>';
+  }).join('');
+  const dis=!s.llama.running||!!s.action;
+  ['b_speed','b_test','b_stop'].forEach(id=>document.getElementById(id).disabled=dis);
+}
+async function launch(b){await api('/api/launch',{bat:b});refresh()}
+async function stop(){if(confirm('Остановить сервер?')){await api('/api/stop',{});refresh()}}
+function out(html){const e=document.getElementById('out');e.innerHTML=html;e.className='show';e.scrollIntoView({behavior:'smooth',block:'nearest'})}
+async function speed(){out('<span class="spin">⟳</span> Замеряю скорость (64 токена)…');const r=await api('/api/speed',{});
+  out(r.ok?('⚡ Генерация: <b>'+r.gen_tps+' tok/s</b> ('+r.gen_tokens+' ток. за '+r.gen_ms+' мс) · Промпт: '+r.prompt_tps+' tok/s · всего '+r.wall_s+' с'):('<span class="err">❌ '+esc(r.error)+'</span>'))}
+async function test(){out('<span class="spin">⟳</span> Тестовый запрос…');const r=await api('/api/test',{});
+  out(r.ok?('✅ '+esc(r.content)+(r.tps?(' · '+r.tps+' tok/s · '+r.elapsed+' с'):'')):('<span class="err">❌ '+esc(r.error)+'</span>'))}
+async function showlog(){const e=document.getElementById('out');if(e.className==='show'&&e.dataset.m==='log'){e.className='';return}
+  e.dataset.m='log';e.textContent='…';const r=await api('/api/log');e.textContent=r.lines;e.className='show'}
+async function showvram(){const e=document.getElementById('out');if(e.className==='show'&&e.dataset.m==='vram'){e.className='';return}
+  e.dataset.m='vram';e.textContent='…';const r=await api('/api/vram_procs');
+  const L=[];const tot=r.vram?r.vram.used_mb:0;
+  if(r.vram)L.push('Всего занято: '+r.vram.used_mb+' / '+r.vram.total_mb+' МБ (свободно '+(r.vram.total_mb-r.vram.used_mb)+' МБ)\n');
+  const rows=(r.procs||[]).map(p=>({l:p.name+' (pid '+p.pid+')',mb:p.mb}));
+  const sum=rows.reduce((a,x)=>a+x.mb,0);if(tot&&sum<tot)rows.push({l:'прочие',mb:tot-sum});
+  const w=Math.max(34,...rows.map(x=>x.l.length))+2;
+  L.push('Процесс'.padEnd(w)+'VRAM'.padStart(9)+'   доля');L.push('─'.repeat(w+16));
+  rows.forEach(x=>{const p=tot?Math.round(x.mb/tot*100):0;L.push(x.l.padEnd(w)+(x.mb+' МБ').padStart(9)+'   '+String(p).padStart(3)+'%')});
+  e.textContent=L.join('\n');e.className='show'}
+setInterval(refresh,2000);refresh();
+</script>
+</body>
+</html>
