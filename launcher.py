@@ -421,7 +421,7 @@ button.sec{background:var(--card2);border:1px solid #2c3340}
 </style>
 </head>
 <body>
-<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.7</span></h1>
+<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.8</span></h1>
 <div class="sub">llama.cpp на этом ПК · порт 1337 · одновременно работает одна модель</div>
 <div class="bar">
   <div id="status">...</div>
@@ -515,8 +515,22 @@ async function speed(){
 }
 async function showlog(){
   const el=document.getElementById('logbox');
-  if(el.style.display==='none'){ el.textContent='…'; const r=await api('/api/log'); el.textContent=r.lines; el.style.display='block'; }
-  else el.style.display='none';
+  if(el.style.display==='none'){
+    el.textContent='…'; el.style.display='block'; el.dataset.live='1';
+    refreshlog();                       // первое обновление сразу
+    el.dataset.timer=setInterval(refreshlog,2000);   // живое обновление каждые 2 сек
+  } else {
+    if(el.dataset.timer){clearInterval(+el.dataset.timer);delete el.dataset.timer;}
+    el.style.display='none';
+  }
+}
+async function refreshlog(){             // тянем хвост лога, скролл вниз только если пользователь там
+  const el=document.getElementById('logbox');
+  if(!el || el.style.display==='none')return;
+  const r=await api('/api/log',{});
+  if(r.lines!==undefined){el.textContent=r.lines;}
+  const stick=el.scrollHeight-el.clientHeight-el.scrollTop<40;
+  if(stick)el.scrollTop=el.scrollHeight;
 }
 async function showvram(){
   const el=document.getElementById('vrambox');
