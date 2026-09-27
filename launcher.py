@@ -20,7 +20,7 @@ import webbrowser
 
 HOST = "0.0.0.0"
 PORT = 8090
-BAT_DIR = r"E:\Ai\llama.cpp"
+BAT_DIR = r"E:\Ai\llama.cpp\launcher"
 LLAMA_HOST = "127.0.0.1"
 LLAMA_PORT = 1337
 LLAMA_LOG = r"E:\Ai\llama.cpp\llama-server.log"
