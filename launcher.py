@@ -421,7 +421,7 @@ button.sec{background:var(--card2);border:1px solid #2c3340}
 </style>
 </head>
 <body>
-<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.8</span></h1>
+<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.9</span></h1>
 <div class="sub">llama.cpp на этом ПК · порт 1337 · одновременно работает одна модель</div>
 <div class="bar">
   <div id="status">...</div>
@@ -527,7 +527,7 @@ async function showlog(){
 async function refreshlog(){             // тянем хвост лога, скролл вниз только если пользователь там
   const el=document.getElementById('logbox');
   if(!el || el.style.display==='none')return;
-  const r=await api('/api/log',{});
+  const r=await fetch('/api/log');
   if(r.lines!==undefined){el.textContent=r.lines;}
   const stick=el.scrollHeight-el.clientHeight-el.scrollTop<40;
   if(stick)el.scrollTop=el.scrollHeight;
