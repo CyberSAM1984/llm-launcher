@@ -421,7 +421,7 @@ button.sec{background:var(--card2);border:1px solid #2c3340}
 </style>
 </head>
 <body>
-<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.9</span></h1>
+<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.10</span></h1>
 <div class="sub">llama.cpp на этом ПК · порт 1337 · одновременно работает одна модель</div>
 <div class="bar">
   <div id="status">...</div>
@@ -435,7 +435,7 @@ button.sec{background:var(--card2);border:1px solid #2c3340}
 <div class="row"><button class="sec" onclick="showlog()">Лог сервера</button>
 <button class="sec" onclick="showvram()">Кто ест VRAM</button>
 <button class="sec" onclick="location.href='/themes'">🎨 Оформление</button></div>
-<div id="logbox"></div>
+<div id="logbox" style="display:none;margin-top:14px;background:#0a0c10;border:1px solid #262b36;border-radius:10px;padding:12px;font:12px/1.4 Consolas,monospace;white-space:pre-wrap;max-height:340px;overflow:auto;color:#b7c0cf"></div>
 <div id="vrambox" style="display:none;margin-top:14px;background:#0a0c10;border:1px solid #262b36;border-radius:10px;padding:12px;font:13px/1.6 Consolas,monospace;color:#b7c0cf;white-space:pre-wrap"></div>
 <script>
 async function api(path, body){

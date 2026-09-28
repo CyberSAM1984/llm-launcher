@@ -125,8 +125,9 @@ async function speed(){out('<span class="spin">⟳</span> Замеряю ско�
   out(r.ok?('⚡ Генерация: <b>'+r.gen_tps+' tok/s</b> ('+r.gen_tokens+' ток. за '+r.gen_ms+' мс) · Промпт: '+r.prompt_tps+' tok/s · всего '+r.wall_s+' с'):('<span class="err">❌ '+esc(r.error)+'</span>'))}
 async function test(){out('<span class="spin">⟳</span> Тестовый запрос…');const r=await api('/api/test',{});
   out(r.ok?('✅ '+esc(r.content)+(r.tps?(' · '+r.tps+' tok/s · '+r.elapsed+' с'):'')):('<span class="err">❌ '+esc(r.error)+'</span>'))}
-async function showlog(){const e=document.getElementById('out');if(e.className==='show'&&e.dataset.m==='log'){e.className='';return}
-  e.dataset.m='log';e.textContent='…';const r=await api('/api/log');e.textContent=r.lines;e.className='show'}
+async function showlog(){const e=document.getElementById('out');if(e.className==='show'&&e.dataset.m==='log'){e.dataset.m='';e.className='';clearInterval(e._t);return}
+  e.dataset.m='log';e.textContent='…';e.className='show';
+  clearInterval(e._t);e._t=setInterval(async()=>{if(e.dataset.m!=='log')return;const r=await api('/api/log');e.textContent=r.lines||'(лог пуст)'},2000)}
 async function showvram(){const e=document.getElementById('out');if(e.className==='show'&&e.dataset.m==='vram'){e.className='';return}
   e.dataset.m='vram';e.textContent='…';const r=await api('/api/vram_procs');
   const L=[];const tot=r.vram?r.vram.used_mb:0;
