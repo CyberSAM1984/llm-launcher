@@ -421,7 +421,7 @@ button.sec{background:var(--card2);border:1px solid #2c3340}
 </style>
 </head>
 <body>
-<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.10</span></h1>
+<h1>🦙 LLM Launcher <span class="dim" style="font-size:13px">v1.11</span></h1>
 <div class="sub">llama.cpp на этом ПК · порт 1337 · одновременно работает одна модель</div>
 <div class="bar">
   <div id="status">...</div>
@@ -513,25 +513,10 @@ async function speed(){
     : ('❌ Ошибка: '+r.error);
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-async function showlog(){
-  const el=document.getElementById('logbox');
-  if(el.style.display==='none'){
-    el.textContent='…'; el.style.display='block'; el.dataset.live='1';
-    refreshlog();                       // первое обновление сразу
-    el.dataset.timer=setInterval(refreshlog,2000);   // живое обновление каждые 2 сек
-  } else {
-    if(el.dataset.timer){clearInterval(+el.dataset.timer);delete el.dataset.timer;}
-    el.style.display='none';
-  }
-}
-async function refreshlog(){             // тянем хвост лога, скролл вниз только если пользователь там
-  const el=document.getElementById('logbox');
-  if(!el || el.style.display==='none')return;
-  const r=await fetch('/api/log');
-  if(r.lines!==undefined){el.textContent=r.lines;}
-  const stick=el.scrollHeight-el.clientHeight-el.scrollTop<40;
-  if(stick)el.scrollTop=el.scrollHeight;
-}
+async function showlog(){const e=document.getElementById('logbox');
+  if(e.dataset.m==='log'){e.dataset.m='';e.style.display='none';if(e._t)clearInterval(e._t);return}
+  e.dataset.m='log';e.style.display='block';e.textContent='…';
+  clearInterval(e._t);e._t=setInterval(async()=>{if(e.dataset.m!=='log')return;const r=await api('/api/log');e.textContent=r.lines||'(лог пуст)'},2000)}
 async function showvram(){
   const el=document.getElementById('vrambox');
   if(el.style.display==='none'){
